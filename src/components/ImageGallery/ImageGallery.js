@@ -1,4 +1,4 @@
-import React, { Component } from "react"
+import React, { useState, useEffect } from "react"
 
 import ImageGalleryItem from "../ImageGalleryItem/ImageGalleryItem"
 import styled from "./ImageGallery.module.css"
@@ -12,67 +12,60 @@ import api from "../utills/ApiService"
 import Button from "../Button/Button"
 import LoaderSpinner from "../Loader/Loader"
 
-class ImageGallery extends Component {
-  state = {
-    arrImg: [],
-    loading: false,
-  }
+const ImageGallery = ({ searchQuery }) => {
+  const [arrImg, setArrImg] = useState([])
+  const [loading, setLoading] = useState(false)
 
-  componentDidUpdate(prevProps, prevState) {
-    const prevQuery = prevProps.searchQuery
-    const nextQuery = this.props.searchQuery
-
-    if (prevQuery !== nextQuery) {
-      this.setState({ arrImg: [] })
-      api.resetPage()
-      api.searchQuery = nextQuery
-      this.saveImages()
-    }
-
-    if (api.page > 1) {
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: "smooth",
-      })
-    }
-  }
-
-  saveImages() {
-    this.setState({ loading: true })
+  const saveImages = () => {
+    setLoading(true)
     const notifyError = () => toast.error("Images wasn`t found")
 
     api
       .fetchQuery()
       .then((res) => {
         if (!res.hits.length) notifyError()
-        this.setState((prevState) => ({
-          arrImg: [...prevState.arrImg, ...res.hits],
-        }))
+        setArrImg((prevState) => [...prevState, ...res.hits])
       })
 
       .catch((error) => console.log(error))
-      .finally(() => this.setState({ loading: false }))
+      .finally(() => setLoading(false))
   }
 
-  onLoadMoreClick = () => {
+  const onLoadMoreClick = () => {
     api.incrementPage()
-    this.saveImages()
+    saveImages()
   }
 
-  render() {
-    const { arrImg, loading } = this.state
-    return (
-      <>
-        <ul className={styled.ImageGallery}>
-          {arrImg.map(({ webformatURL, tags, largeImageURL }, index) => (
-            <ImageGalleryItem webformatURL={webformatURL} name={tags} key={index} largeImageURL={largeImageURL} />
-          ))}
-        </ul>
-        {arrImg.length > 1 && !loading && <Button onBtnLoadClick={this.onLoadMoreClick} />}
-        {loading && <LoaderSpinner />}
-      </>
-    )
-  }
+  useEffect(() => {
+    if (!searchQuery) {
+      return
+    }
+    setArrImg([])
+    api.resetPage()
+    api.searchQuery = searchQuery
+    saveImages()
+  }, [searchQuery])
+
+  useEffect(() => {
+    if (api.page > 1) {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: "smooth",
+      })
+    }
+  }, [arrImg])
+
+  return (
+    <>
+      <ul className={styled.ImageGallery}>
+        {arrImg.map(({ webformatURL, tags, largeImageURL }, index) => (
+          <ImageGalleryItem webformatURL={webformatURL} name={tags} key={index} largeImageURL={largeImageURL} />
+        ))}
+      </ul>
+      {arrImg.length > 1 && !loading && <Button onBtnLoadClick={onLoadMoreClick} />}
+      {loading && <LoaderSpinner />}
+    </>
+  )
 }
 
 ImageGallery.propTypes = {

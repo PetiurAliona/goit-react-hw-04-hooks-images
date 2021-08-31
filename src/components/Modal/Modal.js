@@ -1,83 +1,48 @@
-import React, { useState } from "react"
+import React, { useEffect } from "react"
 import { createPortal } from "react-dom"
 import styled from "./Modal.module.css"
 import PropTypes from "prop-types"
 
 const modalRoot = document.querySelector("#modal")
 
-const Modal ({ onClose, largeImageURL, alt }) => {
-  
-  // componentDidMount() {
-  //   window.addEventListener("keydown", this.closeModalEsc)
-  //   const body = document.querySelector("body")
-  //   body.style.overflow = "hidden"
-  // }
-  // componentWillUnmount() {
-  //   window.removeEventListener("keydown", this.closeModalEsc)
-  //   const body = document.querySelector("body")
-  //   body.style.overflow = ""
-  // }
-
-  
-
+const Modal = ({ onClose, largeImageURL, tags }) => {
   const closeModalEsc = (e) => {
-    if (e.code === "Escape") this.props.onClose()
+    if (e.code === "Escape") {
+      onClose()
+    }
   }
 
   const onOverlayClick = (e) => {
-    if (e.target === e.currentTarget) this.props.onClose()
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
   }
- 
-    return createPortal(
-      <div className={styled.Overlay} onClick={onOverlayClick}>
-        <div className={styled.Modal}>
-          <img src={largeImageURL} alt={tags} />
-        </div>
-      </div>,
-      modalRoot
-    )
-  
+
+  useEffect(() => {
+    window.addEventListener("keydown", closeModalEsc)
+    const body = document.querySelector("body")
+    body.style.overflow = "hidden"
+    return () => {
+      window.removeEventListener("keydown", closeModalEsc)
+      const body = document.querySelector("body")
+      body.style.overflow = ""
+    }
+  })
+
+  return createPortal(
+    <div className={styled.Overlay} onClick={onOverlayClick}>
+      <div className={styled.Modal}>
+        <img src={largeImageURL} alt={tags} />
+      </div>
+    </div>,
+    modalRoot
+  )
+}
+
+Modal.propTypes = {
+  onClose: PropTypes.func,
+  largeImageURL: PropTypes.string,
+  tags: PropTypes.string,
 }
 
 export default Modal
-
-// class Modal extends Component {
-//   static propTypes = {
-//     onClose: PropTypes.func,
-//     largeImageURL: PropTypes.string,
-//     tags: PropTypes.string,
-//   }
-
-//   componentDidMount() {
-//     window.addEventListener("keydown", this.closeModalEsc)
-//     const body = document.querySelector("body")
-//     body.style.overflow = "hidden"
-//   }
-//   componentWillUnmount() {
-//     window.removeEventListener("keydown", this.closeModalEsc)
-//     const body = document.querySelector("body")
-//     body.style.overflow = ""
-//   }
-
-//   closeModalEsc = (e) => {
-//     if (e.code === "Escape") this.props.onClose()
-//   }
-
-//   onOverlayClick = (e) => {
-//     if (e.target === e.currentTarget) this.props.onClose()
-//   }
-
-//   render() {
-//     const { largeImageURL, tags } = this.props
-//     return createPortal(
-//       <div className={styled.Overlay} onClick={this.onOverlayClick}>
-//         <div className={styled.Modal}>
-//           <img src={largeImageURL} alt={tags} />
-//         </div>
-//       </div>,
-//       modalRoot
-//     )
-//   }
-// }
-
-// export default Modal
